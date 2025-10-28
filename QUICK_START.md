@@ -13,7 +13,6 @@
 
 ### 1. Run ROXI
 ```bash
-cd d:\Blender_Codes\Codes\Py\ROXI
 python app.py
 ```
 
