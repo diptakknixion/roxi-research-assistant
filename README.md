@@ -1,13 +1,13 @@
 # 🤖 ROXI - Research Paper AI Assistant
 
-ROXI is an intelligent research assistant that helps you search for academic papers, download PDFs, generate proper citations, and summarize research content using AI.
+ROXI is an intelligent research assistant that helps you search for academic papers, download PDFs, generate proper citations, and summarize research content using mock AI demonstrations.
 
 ## ✨ Features
 
 - **🔍 Smart Paper Search**: Search across multiple academic databases (Semantic Scholar, CrossRef)
 - **📥 PDF Download**: Automatically download research papers when available
 - **📝 Citation Generation**: Generate citations in multiple formats (APA, MLA, IEEE, Chicago, Harvard)
-- **🤖 AI Summarization**: Get AI-powered summaries of research papers
+- **🤖 AI Summarization**: Get AI-powered summaries of research papers (mock demonstrations ready for real API integration)
 - **📚 Library Management**: Organize and manage your downloaded papers
 - **🌐 Web Interface**: User-friendly web interface for easy interaction
 - **🔌 REST API**: Complete API for programmatic access
@@ -26,17 +26,14 @@ pip install -r requirements.txt
 
 ### 2. Configuration
 
-Set your OpenAI API key for AI summarization features:
+**Note**: ROXI currently uses mock AI demonstrations. For real AI summarization, you'll need to configure an API key:
 
-**Windows:**
-```bash
-set OPENAI_API_KEY=your_openai_api_key_here
+Create a `.env` file:
+```env
+OPENAI_API_KEY=your_api_key_here
 ```
 
-**Linux/Mac:**
-```bash
-export OPENAI_API_KEY=your_openai_api_key_here
-```
+The mock AI features work immediately without any API key setup.
 
 ### 3. Run ROXI
 
@@ -114,7 +111,7 @@ ROXI supports multiple citation formats:
 
 ### Environment Variables
 
-- `OPENAI_API_KEY`: Your OpenAI API key for AI features
+- `OPENAI_API_KEY`: Your API key for AI features (optional - mock AI works without it)
 - `FLASK_ENV`: Set to `development` for debug mode
 
 ### Directory Structure
@@ -168,9 +165,11 @@ ROXI searches multiple academic databases:
 2. **CrossRef**: DOI-based academic publication database
 3. **Automatic Deduplication**: Removes duplicate results across sources
 
-## 🤖 AI Features
+## 🤖 AI Features (Mock Demonstrations)
 
 ### Summarization Types
+
+**Note**: Currently uses mock demonstrations. Real AI integration ready with proper API setup.
 
 - **bullet_points**: 5-point summary covering key aspects
 - **abstract**: Concise abstract-style summary (150-200 words)
@@ -179,13 +178,20 @@ ROXI searches multiple academic databases:
 
 ### Information Extraction
 
-ROXI can extract structured information from papers:
+ROXI can extract structured information from papers (mock demonstrations):
 - Title and authors
 - Research area and keywords
 - Methodology description
 - Main contributions
 - Datasets and tools used
 - Limitations and future work
+
+### Real AI Integration
+
+The code is structured for easy AI API integration. Simply replace the mock functions with real API calls to enable:
+- Actual OpenAI GPT summaries
+- Real PDF content analysis
+- Dynamic information extraction
 
 ## 🔒 Privacy & Security
 
@@ -207,8 +213,9 @@ ROXI can extract structured information from papers:
    - Some papers may require institutional access
 
 3. **AI summarization not working**
-   - Verify your OpenAI API key is set correctly
-   - Check your OpenAI account has sufficient credits
+   - Currently uses mock demonstrations - no API key needed
+   - For real AI: configure API key in `.env` file
+   - Mock summaries should work immediately
 
 4. **Import errors**
    - Ensure all dependencies are installed: `pip install -r requirements.txt`
