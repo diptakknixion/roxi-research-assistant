@@ -2,10 +2,35 @@ from flask import Flask, request, jsonify, render_template_string
 from flask_cors import CORS
 import os
 from dotenv import load_dotenv
-from services.scholar import search_papers
-from services.pdf_manager import download_pdf, list_downloaded_pdfs, get_pdf_info
-from services.citation import format_citation, generate_bibtex
-from services.summarizer import summarize_paper, extract_key_information
+
+# Import services with error handling
+try:
+    from services.scholar import search_papers
+except Exception as e:
+    print(f"Warning: Failed to import search_papers: {e}")
+    search_papers = None
+
+try:
+    from services.pdf_manager import download_pdf, list_downloaded_pdfs, get_pdf_info
+except Exception as e:
+    print(f"Warning: Failed to import pdf_manager: {e}")
+    download_pdf = None
+    list_downloaded_pdfs = None
+    get_pdf_info = None
+
+try:
+    from services.citation import format_citation, generate_bibtex
+except Exception as e:
+    print(f"Warning: Failed to import citation: {e}")
+    format_citation = None
+    generate_bibtex = None
+
+try:
+    from services.summarizer import summarize_paper, extract_key_information
+except Exception as e:
+    print(f"Warning: Failed to import summarizer: {e}")
+    summarize_paper = None
+    extract_key_information = None
 
 # Load environment variables
 load_dotenv()
@@ -17,10 +42,13 @@ CORS(app)  # Enable CORS for frontend integration
 os.makedirs("data/library", exist_ok=True)
 
 # Vercel serverless handler
-from serverless_wsgi import handle
-
-def handler(request):
-    return handle(app, request)
+try:
+    from serverless_wsgi import handle
+    def handler(request):
+        return handle(app, request)
+except ImportError:
+    # Fallback for local development
+    handler = None
 
 @app.route("/", methods=["GET"])
 def home():
