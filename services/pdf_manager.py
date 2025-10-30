@@ -162,7 +162,7 @@ def extract_text_from_pdf(filepath):
         }
         
         for page_num, page in enumerate(reader.pages):
-            page_text = page.extract_text()
+            page_text = page.extract_text() or ""
             text += f"\n--- Page {page_num + 1} ---\n{page_text}"
         
         return {
