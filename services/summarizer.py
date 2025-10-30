@@ -1,9 +1,14 @@
 import os
 from dotenv import load_dotenv
-from .pdf_manager import extract_text_from_pdf
 
 # Load environment variables
 load_dotenv()
+
+# Import pdf_manager with error handling
+try:
+    from .pdf_manager import extract_text_from_pdf
+except ImportError:
+    extract_text_from_pdf = None
 
 # Initialize OpenAI client only when needed to avoid import errors
 def get_roxi_client():
@@ -121,6 +126,9 @@ def summarize_paper(file_path, summary_type="bullet_points"):
         file_path: Path to the PDF file
         summary_type: Type of summary ("bullet_points", "abstract", "detailed", "key_findings")
     """
+    if extract_text_from_pdf is None:
+        return {"status": "error", "message": "PDF extraction not available"}
+    
     # Extract text from PDF
     extraction_result = extract_text_from_pdf(file_path)
     
@@ -209,6 +217,9 @@ Focus specifically on the key findings and results of this research:
 
 def extract_key_information(file_path):
     """Extract key structured information from a research paper"""
+    if extract_text_from_pdf is None:
+        return {"status": "error", "message": "PDF extraction not available"}
+    
     extraction_result = extract_text_from_pdf(file_path)
     
     if extraction_result["status"] != "success":
