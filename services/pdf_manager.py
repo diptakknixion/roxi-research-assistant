@@ -1,9 +1,13 @@
 import requests
 import os
 import hashlib
-from pypdf import PdfReader
 from urllib.parse import urlparse, unquote
 import time
+
+try:
+    from pypdf import PdfReader
+except ImportError:
+    PdfReader = None
 
 def download_pdf(url, folder="data/library"):
     """
@@ -138,6 +142,14 @@ def download_pdf(url, folder="data/library"):
 
 def is_valid_pdf(filepath):
     """Check if the downloaded file is a valid PDF"""
+    if PdfReader is None:
+        # Fallback: just check if file exists and has PDF header
+        try:
+            with open(filepath, 'rb') as f:
+                return f.read(4) == b'%PDF'
+        except:
+            return False
+    
     try:
         reader = PdfReader(filepath)
         page_count = len(reader.pages)
@@ -149,6 +161,9 @@ def extract_text_from_pdf(filepath):
     """Extract text from PDF with better error handling"""
     if not os.path.exists(filepath):
         return {"status": "error", "message": "PDF file not found"}
+    
+    if PdfReader is None:
+        return {"status": "error", "message": "PDF library not available"}
     
     try:
         reader = PdfReader(filepath)
@@ -179,6 +194,9 @@ def get_pdf_info(filepath):
     """Get basic information about a PDF file"""
     if not os.path.exists(filepath):
         return {"status": "error", "message": "PDF file not found"}
+    
+    if PdfReader is None:
+        return {"status": "error", "message": "PDF library not available"}
     
     try:
         reader = PdfReader(filepath)
