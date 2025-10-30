@@ -1,7 +1,7 @@
 import requests
 import os
 import hashlib
-import fitz  # PyMuPDF
+from pypdf import PdfReader
 from urllib.parse import urlparse, unquote
 import time
 
@@ -139,9 +139,8 @@ def download_pdf(url, folder="data/library"):
 def is_valid_pdf(filepath):
     """Check if the downloaded file is a valid PDF"""
     try:
-        doc = fitz.open(filepath)
-        page_count = len(doc)
-        doc.close()
+        reader = PdfReader(filepath)
+        page_count = len(reader.pages)
         return page_count > 0
     except:
         return False
@@ -152,22 +151,19 @@ def extract_text_from_pdf(filepath):
         return {"status": "error", "message": "PDF file not found"}
     
     try:
-        doc = fitz.open(filepath)
+        reader = PdfReader(filepath)
         text = ""
         metadata = {
-            "page_count": len(doc),
-            "title": doc.metadata.get("title", ""),
-            "author": doc.metadata.get("author", ""),
-            "subject": doc.metadata.get("subject", ""),
-            "creator": doc.metadata.get("creator", "")
+            "page_count": len(reader.pages),
+            "title": reader.metadata.get("/Title", "") if reader.metadata else "",
+            "author": reader.metadata.get("/Author", "") if reader.metadata else "",
+            "subject": reader.metadata.get("/Subject", "") if reader.metadata else "",
+            "creator": reader.metadata.get("/Creator", "") if reader.metadata else ""
         }
         
-        for page_num in range(len(doc)):
-            page = doc[page_num]
-            page_text = page.get_text()
+        for page_num, page in enumerate(reader.pages):
+            page_text = page.extract_text()
             text += f"\n--- Page {page_num + 1} ---\n{page_text}"
-        
-        doc.close()
         
         return {
             "status": "success",
@@ -185,23 +181,22 @@ def get_pdf_info(filepath):
         return {"status": "error", "message": "PDF file not found"}
     
     try:
-        doc = fitz.open(filepath)
+        reader = PdfReader(filepath)
         info = {
             "status": "success",
             "filename": os.path.basename(filepath),
             "size": os.path.getsize(filepath),
-            "page_count": len(doc),
+            "page_count": len(reader.pages),
             "metadata": {
-                "title": doc.metadata.get("title", ""),
-                "author": doc.metadata.get("author", ""),
-                "subject": doc.metadata.get("subject", ""),
-                "creator": doc.metadata.get("creator", ""),
-                "producer": doc.metadata.get("producer", ""),
-                "creation_date": doc.metadata.get("creationDate", ""),
-                "modification_date": doc.metadata.get("modDate", "")
+                "title": reader.metadata.get("/Title", "") if reader.metadata else "",
+                "author": reader.metadata.get("/Author", "") if reader.metadata else "",
+                "subject": reader.metadata.get("/Subject", "") if reader.metadata else "",
+                "creator": reader.metadata.get("/Creator", "") if reader.metadata else "",
+                "producer": reader.metadata.get("/Producer", "") if reader.metadata else "",
+                "creation_date": reader.metadata.get("/CreationDate", "") if reader.metadata else "",
+                "modification_date": reader.metadata.get("/ModDate", "") if reader.metadata else ""
             }
         }
-        doc.close()
         return info
         
     except Exception as e:
