@@ -55,20 +55,7 @@ except Exception as e:
     import traceback
     traceback.print_exc()
 
-# Vercel serverless handler
-try:
-    from serverless_wsgi import handle
-    def handler(request):
-        try:
-            return handle(app, request)
-        except Exception as e:
-            print(f"Handler error: {e}")
-            import traceback
-            traceback.print_exc()
-            raise
-except ImportError as e:
-    print(f"Warning: serverless_wsgi not available: {e}")
-    handler = None
+# Vercel handles WSGI automatically with native Flask support
 
 @app.route("/health", methods=["GET"])
 def health():

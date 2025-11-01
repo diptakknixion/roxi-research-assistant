@@ -5,4 +5,3 @@ pypdf==4.0.1
 openai==0.28.1
 python-dotenv==1.1.1
 urllib3==2.1.0
-serverless-wsgi==3.0.0
