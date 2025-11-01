@@ -29,6 +29,8 @@ try:
     from services.summarizer import summarize_paper, extract_key_information
 except Exception as e:
     print(f"Warning: Failed to import summarizer: {e}")
+    import traceback
+    traceback.print_exc()
     summarize_paper = None
     extract_key_information = None
 
@@ -39,16 +41,38 @@ app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend integration
 
 # Create data directory if it doesn't exist
-os.makedirs("data/library", exist_ok=True)
+try:
+    os.makedirs("data/library", exist_ok=True)
+except Exception as e:
+    print(f"Warning: Could not create data directory: {e}")
 
 # Vercel serverless handler
 try:
     from serverless_wsgi import handle
     def handler(request):
-        return handle(app, request)
-except ImportError:
-    # Fallback for local development
+        try:
+            return handle(app, request)
+        except Exception as e:
+            print(f"Handler error: {e}")
+            import traceback
+            traceback.print_exc()
+            raise
+except ImportError as e:
+    print(f"Warning: serverless_wsgi not available: {e}")
     handler = None
+
+@app.route("/health", methods=["GET"])
+def health():
+    """Health check endpoint"""
+    return jsonify({
+        "status": "ok",
+        "services": {
+            "search_papers": search_papers is not None,
+            "pdf_manager": download_pdf is not None,
+            "citation": format_citation is not None,
+            "summarizer": summarize_paper is not None
+        }
+    })
 
 @app.route("/", methods=["GET"])
 def home():
@@ -505,6 +529,9 @@ def api_search():
         limit = 50  # Cap the limit
     
     try:
+        if search_papers is None:
+            return jsonify({"error": "Search service not available"}), 500
+        
         print(f"Searching for: {query} (limit: {limit})")
         results = search_papers(query, limit)
         print(f"Found {len(results)} results")
@@ -526,6 +553,9 @@ def api_download():
         return jsonify({"status": "error", "message": "URL is required"}), 400
     
     try:
+        if download_pdf is None:
+            return jsonify({"status": "error", "message": "PDF download not available"}), 500
+        
         # Download the PDF to a temporary location
         result = download_pdf(url)
         
@@ -565,6 +595,9 @@ def api_summarize():
     if not filepath:
         return jsonify({"status": "error", "message": "Filepath is required"}), 400
     
+    if summarize_paper is None:
+        return jsonify({"status": "error", "message": "Summarization not available"}), 500
+    
     result = summarize_paper(filepath, summary_type)
     return jsonify(result)
 
@@ -577,12 +610,18 @@ def api_extract_info():
     if not filepath:
         return jsonify({"status": "error", "message": "Filepath is required"}), 400
     
+    if extract_key_information is None:
+        return jsonify({"status": "error", "message": "Information extraction not available"}), 500
+    
     result = extract_key_information(filepath)
     return jsonify(result)
 
 @app.route("/api/library", methods=["GET"])
 def api_library():
     """List all PDFs in the library"""
+    if list_downloaded_pdfs is None:
+        return jsonify({"status": "error", "message": "Library access not available"}), 500
+    
     result = list_downloaded_pdfs()
     return jsonify(result)
 
@@ -633,6 +672,9 @@ def api_citation():
     data = request.get_json()
     if not data:
         return jsonify({"error": "JSON data is required"}), 400
+    
+    if format_citation is None or generate_bibtex is None:
+        return jsonify({"error": "Citation service not available"}), 500
     
     style = data.get("style", "APA")
     
