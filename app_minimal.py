@@ -13,14 +13,5 @@ def home():
     """Home page"""
     return jsonify({"message": "ROXI is running"})
 
-# Vercel serverless handler
-try:
-    from serverless_wsgi import handle
-    def handler(request):
-        return handle(app, request)
-except ImportError:
-    handler = None
-
 if __name__ == "__main__":
     app.run(debug=True)
-    
