@@ -3,38 +3,7 @@ from flask_cors import CORS
 import os
 from dotenv import load_dotenv
 
-# Import services with error handling
-try:
-    from services.scholar import search_papers
-except Exception as e:
-    print(f"Warning: Failed to import search_papers: {e}")
-    search_papers = None
-
-try:
-    from services.pdf_manager import download_pdf, list_downloaded_pdfs, get_pdf_info
-except Exception as e:
-    print(f"Warning: Failed to import pdf_manager: {e}")
-    download_pdf = None
-    list_downloaded_pdfs = None
-    get_pdf_info = None
-
-try:
-    from services.citation import format_citation, generate_bibtex
-except Exception as e:
-    print(f"Warning: Failed to import citation: {e}")
-    format_citation = None
-    generate_bibtex = None
-
-try:
-    from services.summarizer import summarize_paper, extract_key_information
-except Exception as e:
-    print(f"Warning: Failed to import summarizer: {e}")
-    import traceback
-    traceback.print_exc()
-    summarize_paper = None
-    extract_key_information = None
-
-# Load environment variables
+# Load environment variables first
 load_dotenv()
 
 app = Flask(__name__)
@@ -45,6 +14,46 @@ try:
     os.makedirs("data/library", exist_ok=True)
 except Exception as e:
     print(f"Warning: Could not create data directory: {e}")
+
+# Import services with error handling - AFTER app creation
+search_papers = None
+download_pdf = None
+list_downloaded_pdfs = None
+get_pdf_info = None
+format_citation = None
+generate_bibtex = None
+summarize_paper = None
+extract_key_information = None
+
+try:
+    from services.scholar import search_papers as _search_papers
+    search_papers = _search_papers
+except Exception as e:
+    print(f"Warning: Failed to import search_papers: {e}")
+
+try:
+    from services.pdf_manager import download_pdf as _download_pdf, list_downloaded_pdfs as _list_pdfs, get_pdf_info as _get_pdf_info
+    download_pdf = _download_pdf
+    list_downloaded_pdfs = _list_pdfs
+    get_pdf_info = _get_pdf_info
+except Exception as e:
+    print(f"Warning: Failed to import pdf_manager: {e}")
+
+try:
+    from services.citation import format_citation as _format_citation, generate_bibtex as _generate_bibtex
+    format_citation = _format_citation
+    generate_bibtex = _generate_bibtex
+except Exception as e:
+    print(f"Warning: Failed to import citation: {e}")
+
+try:
+    from services.summarizer import summarize_paper as _summarize_paper, extract_key_information as _extract_key_information
+    summarize_paper = _summarize_paper
+    extract_key_information = _extract_key_information
+except Exception as e:
+    print(f"Warning: Failed to import summarizer: {e}")
+    import traceback
+    traceback.print_exc()
 
 # Vercel serverless handler
 try:
@@ -64,20 +73,27 @@ except ImportError as e:
 @app.route("/health", methods=["GET"])
 def health():
     """Health check endpoint"""
-    return jsonify({
-        "status": "ok",
-        "services": {
-            "search_papers": search_papers is not None,
-            "pdf_manager": download_pdf is not None,
-            "citation": format_citation is not None,
-            "summarizer": summarize_paper is not None
-        }
-    })
+    try:
+        return jsonify({
+            "status": "ok",
+            "services": {
+                "search_papers": search_papers is not None,
+                "pdf_manager": download_pdf is not None,
+                "citation": format_citation is not None,
+                "summarizer": summarize_paper is not None
+            }
+        })
+    except Exception as e:
+        print(f"Health check error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route("/", methods=["GET"])
 def home():
     """Home page with ROXI interface"""
-    return render_template_string("""
+    try:
+        return render_template_string("""
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -515,6 +531,11 @@ def home():
 </body>
 </html>
     """)
+    except Exception as e:
+        print(f"Home route error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route("/api/search", methods=["GET"])
 def api_search():
